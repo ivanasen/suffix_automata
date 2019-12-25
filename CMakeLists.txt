@@ -3,4 +3,4 @@ project(SuffixAutomaton)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(SuffixAutomaton main.cpp)
+add_executable(SuffixAutomaton src/main.cpp src/SuffixAutomaton.cpp src/SuffixAutomaton.h)
