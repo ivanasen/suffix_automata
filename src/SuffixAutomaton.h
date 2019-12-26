@@ -7,9 +7,6 @@
 
 class SuffixAutomaton {
 private:
-//    std::vector<std::vector<int>> edges;
-//    std::vector<int> link;
-//    std::vector<int> length;
     int **vertices;
     int *link;
     int *length;
@@ -23,8 +20,6 @@ private:
     int squaresCount = 0;
 
 public:
-//    explicit SuffixAutomaton(const std::string &s);
-
     explicit SuffixAutomaton(std::istream &istream);
 
     [[nodiscard]] unsigned getStatesCount() const;
