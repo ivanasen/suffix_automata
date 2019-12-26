@@ -5,28 +5,20 @@
 #include <vector>
 #include <unordered_map>
 
-class SuffixAutomaton {
-private:
-    int **vertices;
+struct SuffixAutomaton {
+    int **states;
     int *link;
     int *length;
     int last;
 
-    int verticesSize = 0;
+    int stateSize = 0;
     int linkSize = 0;
     int lengthSize = 0;
 
-    int edgesCount = 0;
-    int squaresCount = 0;
+    int transitionCount = 0;
+    int squareCount = 0;
 
-public:
     explicit SuffixAutomaton(std::istream &istream);
-
-    [[nodiscard]] unsigned getStatesCount() const;
-
-    [[nodiscard]] unsigned getTransitionsCount() const;
-
-    [[nodiscard]] unsigned getLongestSquaresCount() const;
 };
 
 
