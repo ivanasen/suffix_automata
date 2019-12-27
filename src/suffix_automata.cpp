@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fstream>
 #include <cstring>
 
@@ -98,10 +97,6 @@ void build(istream &istream)
 
 int main(int argc, char **argv)
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(nullptr);
-    cout.tie(nullptr);
-
     ifstream input(argv[1]);
     build(input);
     printf("%d\n%d\n%d\n", state_size, transition_count, square_count);
