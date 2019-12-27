@@ -1,5 +1,9 @@
 #include <fstream>
 #include <cstring>
+#include <string>
+#include <algorithm>
+#include <iterator>
+#include <map>
 
 using namespace std;
 
@@ -11,8 +15,6 @@ int *length;
 int last;
 
 int state_size = 0;
-int link_size = 0;
-int length_size = 0;
 
 int transition_count = 0;
 int square_count = 0;
@@ -25,9 +27,10 @@ void build(istream &istream)
 
     // add the initial node
     states[state_size] = new int[26];
+    link[state_size] = -1;
+    length[state_size] = 0;
     memset(states[state_size++], -1, 26 * sizeof(int));
-    link[link_size++] = -1;
-    length[length_size++] = 0;
+
     last = 0;
 
     char curr;
@@ -36,21 +39,20 @@ void build(istream &istream)
     int q;
     int qq;
 
-    int i = 0;
-
     while (istream.get(curr) && curr != '\n')
     {
         curr -= 97;
 
         // construct r
+        r = state_size;
         states[state_size] = new int[26];
+        length[state_size] = length[last] + 1;
+        link[state_size] = 0;
         memset(states[state_size++], -1, 26 * sizeof(int));
-        length[length_size++] = i + 1;
-        link[link_size++] = 0;
-        r = state_size - 1;
 
         // add edges to r and find p with link to q
         p = last;
+        // while (p >= 0 && states[p][curr] == -1)
         while (p >= 0 && states[p][curr] == -1)
         {
             states[p][curr] = r;
@@ -71,15 +73,22 @@ void build(istream &istream)
             else
             {
                 // we have to split, add q'
-                states[state_size++] = states[q];
-                length[length_size++] = length[p] + 1;
-                link[link_size++] = link[q]; // copy parent of q
+                qq = state_size;
+                int *copy = new int[26];
+                for (int it = 0; it < 26; ++it)
+                {
+                    copy[it] = states[q][it];
 
-                qq = state_size - 1;
+                    if (copy[it] != -1)
+                        ++transition_count;
+                }
+
+                states[state_size] = copy;
+                length[state_size] = length[p] + 1;
+                link[state_size++] = link[q]; // copy parent of q
+
                 link[q] = qq;
                 link[r] = qq;
-
-                ++transition_count;
 
                 // move short classes pointing to q to point to q'
                 while (p >= 0 && states[p][curr] == q)
@@ -91,7 +100,6 @@ void build(istream &istream)
         }
 
         last = r;
-        ++i;
     }
 }
 
