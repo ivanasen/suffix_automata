@@ -3,3 +3,11 @@
 
 # CMake
 cmake-build-*/
+
+# Compiled files
+src/a.out
+src/suffix_automata
+src/input_generator
+
+# Input files
+input/
