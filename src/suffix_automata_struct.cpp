@@ -1,20 +1,18 @@
-#include <fstream>
 #include <cstring>
-#include <string>
 #include <vector>
-#include <sstream>
+
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstdio>
+
 #include "shrinking_array.cpp"
-#include <algorithm>
-#include <iterator>
-#include <map>
 
 using namespace std;
 
-using int_array = shrinking_array<26>;
-
 struct State
 {
-    int_array states;
+    shrinking_array<26> states;
     int link;
     int length;
 
@@ -23,86 +21,105 @@ struct State
     }
 };
 
-const int SIZE = 400000000;
-
-int final_count = 0;
+const unsigned int SIZE = 400000000;
+const unsigned int BUFF_SIZE = 1 << 20;
+int state_count = 0;
 int transition_count = 0;
+int final_count = 0;
 int square_count = 0;
 
-vector<State> states;
+int last;
 
-void mark_final_states(int last)
+int mark_final_states(vector<State> &states)
 {
+    int final_count = 0;
     while (last > -1)
     {
         ++final_count;
         last = states[last].link;
     }
+    return final_count;
 }
 
-void build(istream &istream)
+void add_letter(vector<State> &states, char c)
 {
-    const int default_val = int_array::DEFAULT;
+    c -= 97;
+
+    int r = states.size();
+    states.emplace_back(0, states[last].length + 1);
+
+    // add edges to r and find p with link to q
+    int p = last;
+    while (p > -1 && states[p].states.get(c) == -1)
+    {
+        states[p].states.set(c, r);
+        p = states[p].link;
+        ++transition_count;
+    }
+
+    if (p != -1)
+    {
+        int q = states[p].states.get(c);
+
+        if (states[p].length + 1 == states[q].length)
+            // we don't have to split q, just set the correct suffix link
+            states[r].link = q;
+        else
+        {
+            // we have to split, add q'
+            int qq = states.size();
+            states.push_back(states[q]);
+            states.back().length = states[p].length + 1;
+
+            states[r].link = qq;
+            states[q].link = qq;
+
+            transition_count += states.back().states.size;
+
+            // move short classes pointing to q to point to q'
+            while (p > -1 && states[p].states.get(c) == q)
+            {
+                states[p].states.set(c, qq);
+                p = states[p].link;
+            }
+        }
+    }
+
+    last = r;
+}
+
+void build(char *in)
+{
+    int file_desc = open(in, O_RDONLY);
+
+    struct stat buf;
+    fstat(file_desc, &buf);
+
+    if (file_desc == -1)
+        perror("open");
+
+    vector<State> states;
     states.reserve(SIZE);
-    int last = 0;
 
     // add the initial node
     states.emplace_back(-1, 0);
 
-    char curr_char;
-    int r;
-    int p;
-    int q;
-    int qq;
-
-    while (istream.get(curr_char) && curr_char != '\n')
+    ssize_t n = 0;
+    char *buffer = new char[BUFF_SIZE];
+    do
     {
-        curr_char -= 97;
-
-        r = states.size();
-        states.emplace_back(0, states[last].length + 1);
-
-        // add edges to r and find p with link to q
-        p = last;
-        while (p > default_val && states[p].states.get(curr_char) == default_val)
+        n = read(file_desc, buffer, BUFF_SIZE);
+        for (int i = 0; i < n; ++i)
         {
-            states[p].states.set(curr_char, r);
-            p = states[p].link;
-            ++transition_count;
+            if (buffer[i] == '\n')
+                break;
+            add_letter(states, buffer[i]);
         }
+    } while (n > 0);
+    // delete[] buffer;
 
-        if (p != default_val)
-        {
-            q = states[p].states.get(curr_char);
-
-            if (states[p].length + 1 == states[q].length)
-                // we don't have to split q, just set the correct suffix link
-                states[r].link = q;
-            else
-            {
-                // we have to split, add q'
-                qq = states.size();
-                states.push_back(states[q]);
-                states.back().length = states[p].length + 1;
-
-                states[r].link = qq;
-                states[q].link = qq;
-
-                transition_count += states.back().states.size;
-
-                // move short classes pointing to q to point to q'
-                while (p > default_val && states[p].states.get(curr_char) == q)
-                {
-                    states[p].states.set(curr_char, qq);
-                    p = states[p].link;
-                }
-            }
-        }
-
-        last = r;
-    }
-
-    mark_final_states(last);
+    state_count = states.size();
+    final_count = mark_final_states(states);
 }
 
 int main(int argc, char **argv)
@@ -111,12 +128,8 @@ int main(int argc, char **argv)
     cin.tie(nullptr);
     cout.tie(nullptr);
 
-    ifstream input(argv[1]);
-    // stringstream ss;
-    // ss << "abcbc";
-    // build(ss);
-    build(input);
-    printf("%lu\n%d\n%d\n", states.size(), transition_count, final_count);
+    build(argv[1]);
+    printf("%d\n%d\n%d\n%d\n", state_count, transition_count, final_count, square_count);
 
     return 0;
 }

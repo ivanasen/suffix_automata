@@ -36,11 +36,6 @@ struct shrinking_array
         size = other.size;
     }
 
-    ~shrinking_array()
-    {
-        delete[] arr;
-    }
-
     int get(int index)
     {
         if (size == 1 && idx == index)
