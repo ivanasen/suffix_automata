@@ -11,6 +11,7 @@ using namespace std;
 const long SIZE = 400000000;
 
 long state_size = 1;
+long final_count = 0;
 long transition_count = 0;
 long square_count = 0;
 
@@ -89,6 +90,13 @@ void build(istream &istream)
 
         last = r;
     }
+
+    p = last;
+    while (p > 0)
+    {
+        ++final_count;
+        p = link[p];
+    }
 }
 
 int main(int argc, char **argv)
@@ -98,7 +106,7 @@ int main(int argc, char **argv)
     // ss << "abcbc";
     // build(ss);
     build(input);
-    printf("%d\n%d\n%d\n", (int) state_size - 1, (int) transition_count, (int) square_count);
+    printf("%d\n%d\n%d\n", (int)state_size - 1, (int)transition_count, (int)final_count);
 
     return 0;
 }
