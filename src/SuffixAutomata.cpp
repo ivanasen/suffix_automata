@@ -17,10 +17,11 @@ SuffixAutomata::SuffixAutomata()
 int SuffixAutomata::markFinalStates()
 {
     int final_count = 0;
-    while (last > -1)
+    int p = last;
+    while (p > -1)
     {
         ++final_count;
-        last = states[last].link;
+        p = states[p].link;
     }
     return final_count;
 }

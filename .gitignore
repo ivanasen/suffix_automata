@@ -2,7 +2,7 @@
 .idea/
 
 # CMake
-cmake-build/
+build/
 
 # Compiled files
 src/a.out

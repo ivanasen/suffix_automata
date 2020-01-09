@@ -41,6 +41,12 @@ int main(int argc, char **argv)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
+    if (argc != 2)
+    {
+        puts("No input provided.");
+        return 0;
+    }
+
     SuffixAutomata automata;
     build(argv[1], automata);
     printf("%d\n%d\n%d\n%d\n",
