@@ -18,9 +18,9 @@ struct ShrinkingArray
         arr[0] = DEFAULT;
     }
 
-    ShrinkingArray(const ShrinkingArray &other)
+    ShrinkingArray(const ShrinkingArray &other) : idx(other.idx), size(other.size)
     {
-        if (other.size <= 1)
+        if (size <= 1)
         {
             arr = new int[1];
             arr[0] = other.arr[0];
@@ -31,9 +31,6 @@ struct ShrinkingArray
             for (int i = 0; i < SIZE; ++i)
                 arr[i] = other.arr[i];
         }
-
-        idx = other.idx;
-        size = other.size;
     }
 
     int get(int index)

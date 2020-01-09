@@ -14,18 +14,6 @@ SuffixAutomata::SuffixAutomata()
     states.emplace_back(-1, 0); // add the initial node
 }
 
-int SuffixAutomata::markFinalStates()
-{
-    int final_count = 0;
-    int p = last;
-    while (p > -1)
-    {
-        ++final_count;
-        p = states[p].link;
-    }
-    return final_count;
-}
-
 void SuffixAutomata::addLetter(char c)
 {
     c -= 97;
@@ -86,11 +74,11 @@ int SuffixAutomata::getTransitionsCount() const
 int SuffixAutomata::getFinalsCount() const
 {
     int count = 0;
-    int p = last;
-    while (p > -1)
+    int c = last;
+    while (c > -1)
     {
         ++count;
-        p = states[p].link;
+        c = states[c].link;
     }
     return count;
 }

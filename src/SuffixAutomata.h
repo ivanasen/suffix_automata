@@ -35,9 +35,6 @@ struct SuffixAutomata
     int getFinalsCount() const;
 
     int getSquaresCount() const;
-
-private:
-    int markFinalStates();
 };
 
 #endif

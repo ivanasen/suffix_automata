@@ -13,19 +13,19 @@ const unsigned int BUFF_SIZE = 1 << 20;
 
 void build(char *in, SuffixAutomata &automata)
 {
-    int file_desc = open(in, O_RDONLY);
+    int fileDesc = open(in, O_RDONLY);
 
     struct stat buf;
-    fstat(file_desc, &buf);
+    fstat(fileDesc, &buf);
 
-    if (file_desc == -1)
+    if (fileDesc == -1)
         perror("open");
 
     ssize_t n = 0;
     char *buffer = new char[BUFF_SIZE];
     do
     {
-        n = read(file_desc, buffer, BUFF_SIZE);
+        n = read(fileDesc, buffer, BUFF_SIZE);
         for (int i = 0; i < n; ++i)
         {
             if (buffer[i] == '\n')
