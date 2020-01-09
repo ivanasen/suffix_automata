@@ -3,15 +3,15 @@
 
 using namespace std;
 
-char random_char()
+char randomChar()
 {
     return 97 + rand() % 26;
 }
 
-void random_string(ostream &os, int size)
+void randomString(ostream &os, int size)
 {
     for (int i = 0; i < size; ++i)
-        os << random_char();
+        os << randomChar();
 }
 
 int main()
@@ -22,7 +22,7 @@ int main()
     cin >> file_name >> size;
     ofstream output(file_name);
 
-    random_string(output, size);
+    randomString(output, size);
     puts("Done.");
 
     return 0;

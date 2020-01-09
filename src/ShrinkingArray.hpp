@@ -1,11 +1,11 @@
+#ifndef SHRINKING_ARRAY_H
+#define SHRINKING_ARRAY_H
+
 #include <cstring>
-#include <iostream>
 #include <stdio.h>
 
-using namespace std;
-
 template <const int SIZE>
-struct shrinking_array
+struct ShrinkingArray
 {
     static const int DEFAULT = -1;
 
@@ -13,12 +13,12 @@ struct shrinking_array
     int idx;
     int size;
 
-    shrinking_array() : arr(new int[1]), idx(DEFAULT), size(0)
+    ShrinkingArray() : arr(new int[1]), idx(DEFAULT), size(0)
     {
         arr[0] = DEFAULT;
     }
 
-    shrinking_array(const shrinking_array &other)
+    ShrinkingArray(const ShrinkingArray &other)
     {
         if (other.size <= 1)
         {
@@ -65,14 +65,14 @@ struct shrinking_array
 
         if (size == 1)
         {
-            int *new_arr = new int[SIZE];
-            memset(new_arr, DEFAULT, SIZE * sizeof(int));
+            int *newArr = new int[SIZE];
+            memset(newArr, DEFAULT, SIZE * sizeof(int));
 
-            new_arr[idx] = arr[0];
+            newArr[idx] = arr[0];
 
             delete[] arr;
 
-            arr = new_arr;
+            arr = newArr;
             idx = DEFAULT;
         }
 
@@ -81,3 +81,5 @@ struct shrinking_array
         arr[index] = value;
     }
 };
+
+#endif

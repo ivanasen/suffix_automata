@@ -6,9 +6,10 @@
             "command": "/usr/bin/g++",
             "args": [
                 "-g",
-                "${file}",
+                "${workspaceFolder}/src/Main.cpp",
+                "${workspaceFolder}/src/SuffixAutomata.cpp",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${workspaceFolder}/SuffixAutomata"
             ],
             "options": {
                 "cwd": "/usr/bin"
