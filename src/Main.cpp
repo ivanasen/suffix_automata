@@ -1,51 +1,44 @@
 #include <cstring>
-#include <vector>
-
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdio>
 #include <iostream>
+#include <sys/mman.h>
+#include <sys/types.h>
 
 #include "SuffixAutomata.h"
-
-const unsigned int BUFF_SIZE = 1 << 20;
 
 void build(char *in, SuffixAutomata &automata)
 {
     int fileDesc = open(in, O_RDONLY);
-
-    struct stat buf;
-    fstat(fileDesc, &buf);
-
     if (fileDesc == -1)
         perror("open");
 
-    ssize_t n = 0;
-    char *buffer = new char[BUFF_SIZE];
-    do
-    {
-        n = read(fileDesc, buffer, BUFF_SIZE);
-        for (int i = 0; i < n; ++i)
-        {
-            if (buffer[i] == '\n')
-                break;
-            automata.addLetter(buffer[i]);
-        }
-    } while (n > 0);
+    struct stat buf;
+    fstat(fileDesc, &buf);
+    int fileSize = buf.st_size;
+
+    char *mmapedFile =
+        (char *)mmap(nullptr, fileSize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fileDesc, 0);
+    if (mmapedFile == MAP_FAILED)
+        perror("map failed");
+
+    for (int i = 0; i < fileSize; ++i)
+        automata.addLetter(mmapedFile[i]);
 }
 
 int main(int argc, char **argv)
 {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-    std::cout.tie(nullptr);
-
     if (argc != 2)
     {
         puts("No input provided.");
         return 0;
     }
+
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
 
     SuffixAutomata automata;
     build(argv[1], automata);

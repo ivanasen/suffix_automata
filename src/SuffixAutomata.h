@@ -2,11 +2,11 @@
 #define SUFFIX_AUTOMATA_H
 
 #include <vector>
-#include "ShrinkingArray.hpp"
+#include "CompactArray.hpp"
 
 struct State
 {
-    ShrinkingArray<26> states;
+    CompactArray<26> states;
     int link;
     int length;
 

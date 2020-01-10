@@ -41,7 +41,7 @@ void SuffixAutomata::addLetter(char c)
         {
             // we have to split, add q'
             int qq = states.size();
-            states.push_back(states[q]);
+            states.emplace_back(states[q]);
             states.back().length = states[p].length + 1;
 
             states[r].link = qq;
