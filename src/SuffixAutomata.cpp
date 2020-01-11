@@ -10,7 +10,8 @@
 
 SuffixAutomata::SuffixAutomata()
 {
-    states.reserve(SIZE);
+    states.reserve(SIZE * 2);
+    CompactArray<26>::globalTransitions.reserve(SIZE * 3);
     states.emplace_back(-1, 0); // add the initial node
 }
 
@@ -47,7 +48,7 @@ void SuffixAutomata::addLetter(char c)
             states[r].link = qq;
             states[q].link = qq;
 
-            transitionsCount += states.back().states.size;
+            transitionsCount += states.back().states.getSize();
 
             // move short classes pointing to q to point to q'
             while (p > -1 && states[p].states.get(c) == q)

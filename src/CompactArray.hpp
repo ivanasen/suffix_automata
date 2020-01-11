@@ -1,29 +1,32 @@
-#ifndef SHRINKING_ARRAY_H
-#define SHRINKING_ARRAY_H
+#ifndef COMPACT_ARRAY_H
+#define COMPACT_ARRAY_H
 
 #include <cstring>
+#include <vector>
 #include <stdio.h>
 
 template <const int SIZE>
 struct CompactArray
 {
-    static const int DEFAULT = -1;
+    inline static std::vector<int> globalTransitions;
+
     static const int SHRINKING_SIZE = 3;
 
+    int id0OrStartIndex = -1;
+    int id1OrIsBigger = -1;
+    int id2OrSize = -1;
+
     int *arr;
-    int id0 = DEFAULT;
-    int id1 = DEFAULT;
-    int id2 = DEFAULT;
-    int size = 0;
 
     CompactArray() = default;
 
     CompactArray(const CompactArray &other)
-        : id0(other.id0),
-          id1(other.id1),
-          id2(other.id2),
-          size(other.size)
+        : id0OrStartIndex(other.id0OrStartIndex),
+          id1OrIsBigger(other.id1OrIsBigger),
+          id2OrSize(other.id2OrSize)
     {
+        int size = getSize();
+
         if (size == 0)
             return;
 
@@ -33,48 +36,51 @@ struct CompactArray
             arr[0] = other.arr[0];
             arr[1] = other.arr[1];
             arr[2] = other.arr[2];
+            return;
         }
 
-        arr = new int[SIZE];
+        id0OrStartIndex = globalTransitions.size();
         for (int i = 0; i < SIZE; ++i)
-            arr[i] = other.arr[i];
+            globalTransitions.push_back(globalTransitions[other.id0OrStartIndex + i]);
     }
 
     int get(int index)
     {
+        int size = getSize();
         if (size > 0)
         {
             if (size <= SHRINKING_SIZE)
             {
-                if (index == id0)
+                if (index == id0OrStartIndex)
                     return arr[0];
-                if (index == id1)
+                if (index == id1OrIsBigger)
                     return arr[1];
-                if (index == id2)
+                if (index == id2OrSize)
                     return arr[2];
-                return DEFAULT;
+                return -1;
             }
-            return arr[index];
+            return globalTransitions[id0OrStartIndex + index];
         }
 
-        return DEFAULT;
+        return -1;
     }
 
     void set(int index, int value)
     {
+        int size = getSize();
         if (size <= SHRINKING_SIZE)
         {
-            if (index == id0)
+            if (index == id0OrStartIndex)
             {
                 arr[0] = value;
                 return;
             }
-            if (index == id1)
+            if (index == id1OrIsBigger)
             {
                 arr[1] = value;
                 return;
             }
-            if (index == id2)
+            if (index == id2OrSize)
             {
                 arr[2] = value;
                 return;
@@ -85,41 +91,58 @@ struct CompactArray
                 if (size == 0)
                 {
                     arr = new int[SHRINKING_SIZE];
-                    id0 = index;
+                    id0OrStartIndex = index;
                     arr[0] = value;
-                    arr[1] = DEFAULT;
-                    arr[2] = DEFAULT;
+                    arr[1] = -1;
+                    arr[2] = -1;
                 }
                 else if (size == 1)
                 {
-                    id1 = index;
+                    id1OrIsBigger = index;
                     arr[1] = value;
                 }
                 else
                 {
-                    id2 = index;
+                    id2OrSize = index;
                     arr[2] = value;
                 }
 
-                ++size;
                 return;
             }
 
-            int *newArr = new int[SIZE];
-            memset(newArr, DEFAULT, SIZE * sizeof(int));
+            int oldId0 = id0OrStartIndex;            
+            id0OrStartIndex = globalTransitions.size();
+            for (char i = 0; i < SIZE; ++i)
+                globalTransitions.push_back(-1);
 
-            newArr[id0] = arr[0];
-            newArr[id1] = arr[1];
-            newArr[id2] = arr[2];
+            globalTransitions[id0OrStartIndex + oldId0] = arr[0];
+            globalTransitions[id0OrStartIndex + id1OrIsBigger] = arr[1];
+            globalTransitions[id0OrStartIndex + id2OrSize] = arr[2];
+
+            id1OrIsBigger = -1;
+            id2OrSize = SHRINKING_SIZE;
 
             delete[] arr;
-
-            arr = newArr;
         }
 
-        if (arr[index] == DEFAULT)
-            ++size;
-        arr[index] = value;
+        if (globalTransitions[id0OrStartIndex + index] == -1)
+            ++id2OrSize;
+        globalTransitions[id0OrStartIndex + index] = value;
+    }
+
+    int getSize() const
+    {
+        if (id0OrStartIndex == -1)
+            return 0;
+        if (id1OrIsBigger == -1 && id2OrSize == -1)
+            return 1;
+        if (id2OrSize == -1)
+            return 2;
+
+        if (id1OrIsBigger != -1)
+            return 3;
+
+        return id2OrSize;
     }
 };
 
