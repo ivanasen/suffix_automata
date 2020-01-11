@@ -45,7 +45,7 @@ struct CompactArray
             bigTransitionState.push_back(bigTransitionState[other.id0OrStartIndex + i]);
     }
 
-    int get(int index)
+    int get(int index) const
     {
         int size = getSize();
         if (size > 0)
