@@ -11,7 +11,9 @@
 SuffixAutomata::SuffixAutomata()
 {
     states.reserve(SIZE * 2);
-    CompactArray<26>::globalTransitions.reserve(SIZE * 3);
+    CompactArray<26>::bigTransitionState.reserve(SIZE);
+    CompactArray<26>::smallTransitionState.reserve(SIZE * 2);
+
     states.emplace_back(-1, 0); // add the initial node
 }
 
@@ -36,8 +38,10 @@ void SuffixAutomata::addLetter(char c)
         int q = states[p].states.get(c);
 
         if (states[p].length + 1 == states[q].length)
+        {
             // we don't have to split q, just set the correct suffix link
             states[r].link = q;
+        }
         else
         {
             // we have to split, add q'

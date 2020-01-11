@@ -8,7 +8,8 @@
 template <const int SIZE>
 struct CompactArray
 {
-    inline static std::vector<int> globalTransitions;
+    inline static std::vector<int> bigTransitionState;
+    inline static std::vector<int> smallTransitionState;
 
     static const int SHRINKING_SIZE = 3;
 
@@ -16,7 +17,7 @@ struct CompactArray
     int id1OrIsBigger = -1;
     int id2OrSize = -1;
 
-    int *arr;
+    int smallArrIndex = -1;
 
     CompactArray() = default;
 
@@ -32,16 +33,16 @@ struct CompactArray
 
         if (size <= SHRINKING_SIZE)
         {
-            arr = new int[SHRINKING_SIZE];
-            arr[0] = other.arr[0];
-            arr[1] = other.arr[1];
-            arr[2] = other.arr[2];
+            smallArrIndex = smallTransitionState.size();
+            smallTransitionState.push_back(smallTransitionState[other.smallArrIndex]);
+            smallTransitionState.push_back(smallTransitionState[other.smallArrIndex + 1]);
+            smallTransitionState.push_back(smallTransitionState[other.smallArrIndex + 2]);
             return;
         }
 
-        id0OrStartIndex = globalTransitions.size();
+        id0OrStartIndex = bigTransitionState.size();
         for (int i = 0; i < SIZE; ++i)
-            globalTransitions.push_back(globalTransitions[other.id0OrStartIndex + i]);
+            bigTransitionState.push_back(bigTransitionState[other.id0OrStartIndex + i]);
     }
 
     int get(int index)
@@ -52,14 +53,14 @@ struct CompactArray
             if (size <= SHRINKING_SIZE)
             {
                 if (index == id0OrStartIndex)
-                    return arr[0];
+                    return smallTransitionState[smallArrIndex];
                 if (index == id1OrIsBigger)
-                    return arr[1];
+                    return smallTransitionState[smallArrIndex + 1];
                 if (index == id2OrSize)
-                    return arr[2];
+                    return smallTransitionState[smallArrIndex + 2];
                 return -1;
             }
-            return globalTransitions[id0OrStartIndex + index];
+            return bigTransitionState[id0OrStartIndex + index];
         }
 
         return -1;
@@ -72,17 +73,17 @@ struct CompactArray
         {
             if (index == id0OrStartIndex)
             {
-                arr[0] = value;
+                smallTransitionState[smallArrIndex] = value;
                 return;
             }
             if (index == id1OrIsBigger)
             {
-                arr[1] = value;
+                smallTransitionState[smallArrIndex + 1] = value;
                 return;
             }
             if (index == id2OrSize)
             {
-                arr[2] = value;
+                smallTransitionState[smallArrIndex + 2] = value;
                 return;
             }
 
@@ -90,44 +91,42 @@ struct CompactArray
             {
                 if (size == 0)
                 {
-                    arr = new int[SHRINKING_SIZE];
+                    smallArrIndex = smallTransitionState.size();
                     id0OrStartIndex = index;
-                    arr[0] = value;
-                    arr[1] = -1;
-                    arr[2] = -1;
+                    smallTransitionState.push_back(value);
+                    smallTransitionState.push_back(-1);
+                    smallTransitionState.push_back(-1);
                 }
                 else if (size == 1)
                 {
                     id1OrIsBigger = index;
-                    arr[1] = value;
+                    smallTransitionState[smallArrIndex + 1] = value;
                 }
                 else
                 {
                     id2OrSize = index;
-                    arr[2] = value;
+                    smallTransitionState[smallArrIndex + 2] = value;
                 }
 
                 return;
             }
 
-            int oldId0 = id0OrStartIndex;            
-            id0OrStartIndex = globalTransitions.size();
+            int oldId0 = id0OrStartIndex;
+            id0OrStartIndex = bigTransitionState.size();
             for (char i = 0; i < SIZE; ++i)
-                globalTransitions.push_back(-1);
+                bigTransitionState.push_back(-1);
 
-            globalTransitions[id0OrStartIndex + oldId0] = arr[0];
-            globalTransitions[id0OrStartIndex + id1OrIsBigger] = arr[1];
-            globalTransitions[id0OrStartIndex + id2OrSize] = arr[2];
+            bigTransitionState[id0OrStartIndex + oldId0] = smallTransitionState[smallArrIndex];
+            bigTransitionState[id0OrStartIndex + id1OrIsBigger] = smallTransitionState[smallArrIndex + 1];
+            bigTransitionState[id0OrStartIndex + id2OrSize] = smallTransitionState[smallArrIndex + 2];
 
             id1OrIsBigger = -1;
             id2OrSize = SHRINKING_SIZE;
-
-            delete[] arr;
         }
 
-        if (globalTransitions[id0OrStartIndex + index] == -1)
+        if (bigTransitionState[id0OrStartIndex + index] == -1)
             ++id2OrSize;
-        globalTransitions[id0OrStartIndex + index] = value;
+        bigTransitionState[id0OrStartIndex + index] = value;
     }
 
     int getSize() const

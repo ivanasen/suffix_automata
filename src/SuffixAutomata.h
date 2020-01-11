@@ -20,7 +20,7 @@ struct SuffixAutomata
 {
     static const unsigned int SIZE = 200000000;
     int transitionsCount = 0;
-    int squaresCount = 0;
+    int squaresCount = 1;
     int last = 0;
 
     std::vector<State> states;
