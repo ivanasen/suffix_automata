@@ -7,7 +7,7 @@ add_executable(SuffixAutomata src/Main.cpp src/SuffixAutomata.h src/SuffixAutoma
 
 add_executable(InputGenerator src/InputGenerator.cpp)
 
-add_executable(RunTests tests/CompactArrayTests.cpp src/CompactArray.hpp)
+add_executable(RunTests tests/Main.cpp src/SuffixAutomata.h src/SuffixAutomata.cpp)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)

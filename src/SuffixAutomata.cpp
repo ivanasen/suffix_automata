@@ -146,7 +146,7 @@ int SuffixAutomata::traverse(int startState, int length) const
 
     while (currentPos - states[startState].start < states[startState].length)
     {
-        int next = states[currentState].states.get(input[currentPos]);
+        int next = states[currentState].states.get(input[currentPos] - 97);
         if (next == -1)
         {
             return -1;
