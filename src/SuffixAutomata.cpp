@@ -11,23 +11,25 @@
 SuffixAutomata::SuffixAutomata(char *input, int size)
     : input(input), inputSize(size)
 {
-    states.reserve(SIZE * 2);
     CompactArray<ALPHABET_SIZE>::initialize(SIZE, SIZE * 2);
+    states.reserve(SIZE * 2);
 
+    // Add state for empty word
     states.emplace_back(-1, 0, true);
 
     for (int i = 0; i < inputSize; ++i)
     {
-        addLetter(input[i]);
+        // primary count is i + 2, because we're counting the state for
+        // the empty word too
+        addLetter(input[i], i + 2);
     }
 }
 
-void SuffixAutomata::addLetter(char c)
+void SuffixAutomata::addLetter(char c, int primaryCount)
 {
     c -= FIRST_LETTER;
 
     int r = states.size();
-    ++primaryCount;
     states.emplace_back(0, states[last].length + 1, true);
     states.back().start = 0;
 

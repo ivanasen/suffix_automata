@@ -31,11 +31,10 @@ struct SuffixAutomata
     std::vector<State> states;
     char* input;
     int inputSize;
-    int primaryCount = 1;
 
     SuffixAutomata(char* input, int size);
 
-    void addLetter(char c);
+    void addLetter(char c, int primaryCount);
 
     int getStatesCount() const;
 
