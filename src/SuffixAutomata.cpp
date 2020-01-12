@@ -15,7 +15,7 @@ SuffixAutomata::SuffixAutomata(char *input, int size)
     CompactArray<26>::bigTransitionState.reserve(SIZE);
     CompactArray<26>::smallTransitionState.reserve(SIZE * 2);
 
-    states.emplace_back(-1, 0, true); // add the initial node
+    states.emplace_back(-1, 0, true);
 
     for (int i = 0; i < inputSize; ++i)
     {
