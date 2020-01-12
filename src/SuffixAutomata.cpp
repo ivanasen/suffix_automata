@@ -8,20 +8,24 @@
 
 #include "SuffixAutomata.h"
 
-SuffixAutomata::SuffixAutomata()
+SuffixAutomata::SuffixAutomata(char *input, int size)
+    : input(input), inputSize(size)
 {
     states.reserve(SIZE * 2);
-    input.reserve(SIZE);
     CompactArray<26>::bigTransitionState.reserve(SIZE);
     CompactArray<26>::smallTransitionState.reserve(SIZE * 2);
 
     states.emplace_back(-1, 0, true); // add the initial node
+
+    for (int i = 0; i < inputSize; ++i)
+    {
+        addLetter(input[i]);
+    }
 }
 
 void SuffixAutomata::addLetter(char c)
 {
     c -= 97;
-    input.push_back(c);
 
     int r = states.size();
     ++primaryCount;
@@ -97,7 +101,7 @@ int SuffixAutomata::getFinalsCount() const
 int SuffixAutomata::getSquaresCount() const
 {
     int count = 1;
-    int halfInputSize = input.size() >> 1;
+    int halfInputSize = inputSize >> 1;
     for (int i = 0; i < states.size(); ++i)
     {
         if (states[i].primary)

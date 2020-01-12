@@ -9,7 +9,7 @@
 
 #include "SuffixAutomata.h"
 
-void build(char *in, SuffixAutomata &automata)
+SuffixAutomata build(char *in)
 {
     int fileDesc = open(in, O_RDONLY);
     if (fileDesc == -1)
@@ -24,8 +24,9 @@ void build(char *in, SuffixAutomata &automata)
     if (mmapedFile == MAP_FAILED)
         perror("map failed");
 
-    for (int i = 0; i < fileSize; ++i)
-        automata.addLetter(mmapedFile[i]);
+    SuffixAutomata automata(mmapedFile, fileSize);
+
+    return automata;
 }
 
 int main(int argc, char **argv)
@@ -40,8 +41,7 @@ int main(int argc, char **argv)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    SuffixAutomata automata;
-    build(argv[1], automata);
+    SuffixAutomata automata = build(argv[1]);
     printf("%d\n%d\n%d\n%d\n",
            automata.getStatesCount(),
            automata.getTransitionsCount(),
