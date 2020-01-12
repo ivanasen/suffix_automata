@@ -12,8 +12,7 @@ SuffixAutomata::SuffixAutomata(char *input, int size)
     : input(input), inputSize(size)
 {
     states.reserve(SIZE * 2);
-    CompactArray<26>::bigTransitionState.reserve(SIZE);
-    CompactArray<26>::smallTransitionState.reserve(SIZE * 2);
+    CompactArray<ALPHABET_SIZE>::initialize(SIZE, SIZE * 2);
 
     states.emplace_back(-1, 0, true);
 
@@ -25,7 +24,7 @@ SuffixAutomata::SuffixAutomata(char *input, int size)
 
 void SuffixAutomata::addLetter(char c)
 {
-    c -= 97;
+    c -= FIRST_LETTER;
 
     int r = states.size();
     ++primaryCount;
@@ -144,9 +143,9 @@ int SuffixAutomata::traverse(int startState, int length) const
     int currentState = startState;
     int currentPos = states[startState].start;
 
-    while (currentPos - states[startState].start < states[startState].length)
+    while (currentPos - states[startState].start < length)
     {
-        int next = states[currentState].states.get(input[currentPos] - 97);
+        int next = states[currentState].states.get(input[currentPos] - FIRST_LETTER);
         if (next == -1)
         {
             return -1;

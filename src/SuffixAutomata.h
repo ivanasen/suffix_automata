@@ -5,13 +5,17 @@
 #include <bitset>
 #include "CompactArray.hpp"
 
+const int ALPHABET_SIZE = 26;
+const unsigned int SIZE = 200000000;
+const int FIRST_LETTER = 97;
+
 struct State
 {
     int link;
     int length;
     int start;
     bool primary = false;
-    CompactArray<26> states;
+    CompactArray<ALPHABET_SIZE> states;
 
     State(int link, int length, bool primary)
         : link(link), length(length), primary(primary)
@@ -21,7 +25,6 @@ struct State
 
 struct SuffixAutomata
 {
-    static const unsigned int SIZE = 200000000;
     int transitionsCount = 0;
     int last = 0;
 

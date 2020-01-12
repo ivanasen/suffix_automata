@@ -19,6 +19,12 @@ struct CompactArray
 
     int smallArrIndex = -1;
 
+    static void initialize(int bigTransitionsCapacity, int smallTransitionsCapacity)
+    {
+        bigTransitionState.reserve(bigTransitionsCapacity);
+        smallTransitionState.reserve(smallTransitionsCapacity);
+    }
+
     CompactArray() = default;
 
     CompactArray(const CompactArray &other)
