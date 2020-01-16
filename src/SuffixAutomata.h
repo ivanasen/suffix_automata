@@ -8,7 +8,6 @@
 #include "CompactArray.hpp"
 
 const int ALPHABET_SIZE = 26;
-const unsigned int SIZE = 200000000;
 const int FIRST_LETTER = 97;
 
 struct State
@@ -31,6 +30,10 @@ struct SuffixAutomata
     std::vector<State> states;
     char *input;
     int inputSize;
+    std::unordered_set<int> leaves;
+    std::vector<int> halfSuffixLinks;
+    std::vector<std::vector<int>> links;
+    // std::unordered_map<int, int> halfSuffixLinks;
 
     SuffixAutomata(char *input, int size);
 
@@ -49,7 +52,7 @@ private:
 
     int traverse(int startState, int length) const;
 
-    void markHalfLengthStates(int start, int& count, std::unordered_map<int, int>& seen);
+    void markHalfLenSuffixLinks();
 };
 
 #endif

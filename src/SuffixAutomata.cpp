@@ -10,13 +10,15 @@
 #include "SuffixAutomata.h"
 
 SuffixAutomata::SuffixAutomata(char *input, int size)
-    : input(input), inputSize(size)
+    : input(input), inputSize(size), halfSuffixLinks(size * 2)
 {
-    CompactArray<ALPHABET_SIZE>::initialize(SIZE, SIZE * 2);
-    states.reserve(SIZE * 2);
+    CompactArray<ALPHABET_SIZE>::initialize(inputSize, inputSize * 2);
+    states.reserve(inputSize * 2);
+    leaves.reserve(inputSize);
 
     // Add state for empty word
     states.emplace_back(-1, 0);
+    leaves.insert(0);
 
     for (int i = 0; i < inputSize; ++i)
     {
@@ -32,6 +34,7 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
 
     int r = states.size();
     states.emplace_back(0, states[last].length + 1);
+    leaves.insert(r);
 
     // add edges to r and find p with link to q
     int p = last;
@@ -50,6 +53,12 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
         {
             // we don't have to split q, just set the correct suffix link
             states[r].link = q;
+
+            auto iter = leaves.find(q);
+            if (iter != leaves.end())
+            {
+                leaves.erase(iter);
+            }
         }
         else
         {
@@ -97,58 +106,119 @@ int SuffixAutomata::getFinalsCount() const
     return count;
 }
 
-void SuffixAutomata::markHalfLengthStates(int start, int &count, std::unordered_map<int, int> &seen)
+void SuffixAutomata::markHalfLenSuffixLinks()
 {
-    State s = states[start];
-    if (s.length % 2 == 0 && seen.find(s.length >> 1) != seen.end())
+    int curr;
+    int currLen;
+    std::unordered_map<int, int> lenToState;
+
+    for (int leaf : leaves)
     {
-        int halfLenLink = findHalfLengthLink(start);
-        if (seen[s.length >> 1] == halfLenLink)
+        curr = leaf;
+        lenToState.clear();
+
+        while (curr != -1)
         {
-            ++count;
+            currLen = states[curr].length;
+            auto iter = lenToState.find(currLen * 2);
+            if (iter != lenToState.end())
+            {
+                halfSuffixLinks[iter->second] = curr;
+            }
+
+            if (!(currLen % 2))
+            {
+                lenToState[currLen] = curr;
+            }
+
+            curr = states[curr].link;
         }
     }
-
-    seen[s.length] = start;
-    for (int i = 0, j = 0; i < ALPHABET_SIZE && j < s.states.getSize(); ++i)
-    {
-        int trans = s.states.get(i);
-
-        if (trans == -1)
-        {
-            continue;
-        }
-
-        ++j;
-
-        if (states[trans].length == s.length + 1)
-        {
-            markHalfLengthStates(trans, count, seen);
-        }
-    }
-    seen.erase(s.length);
 }
 
 int SuffixAutomata::getSquaresCount()
 {
+    puts("Getting squares\n");
+    markHalfLenSuffixLinks();
+    puts("Marked Half Length squares\n");
+
     int count = 1;
 
-    std::unordered_map<int, int> seen;
-    markHalfLengthStates(0, count, seen);
+    std::vector<int> seen(inputSize + 1, -1);
+    std::stack<std::pair<int, int>> dfs;
+    dfs.push({0, 0});
+
+    std::pair<int, int> topP;
+    int top;
+    int halfLenLink;
+    int trans;
+    int i, j;
+    while (!dfs.empty())
+    {
+        topP = dfs.top();
+        top = topP.second;
+        dfs.pop();
+
+        if (topP.first == 0)
+        {
+            State &topState = states[top];
+
+            int seenFound = seen[topState.length >> 1];
+            if (topState.length % 2 == 0 && seenFound != -1)
+            {
+                halfLenLink = halfSuffixLinks[top];
+                if (halfLenLink != 0 && seenFound == halfLenLink)
+                {
+                    ++count;
+                }
+            }
+
+            seen[topState.length] = top;
+            dfs.push({1, topState.length});
+            for (i = 0, j = 0; i < ALPHABET_SIZE && j < topState.states.getSize(); ++i)
+            {
+                trans = topState.states.get(i);
+
+                if (trans == -1)
+                {
+                    continue;
+                }
+
+                ++j;
+
+                if (states[trans].length == topState.length + 1)
+                {
+                    dfs.push({0, trans});
+                }
+            }
+        }
+        else
+        {
+            seen[top] = -1;
+        }
+    }
 
     return count;
 }
 
 int SuffixAutomata::findHalfLengthLink(int u) const
 {
-    int half = states[u].length >> 1;
-    int v = states[u].link;
-    while (v != -1 && states[v].length > half)
-    {
-        v = states[v].link;
-    }
+    // int half = states[u].length >> 1;
+    // int v = states[u].link;
+    // while (v != -1 && states[v].length > half)
+    // {
+    //     v = states[v].link;
+    // }
 
-    if (v != -1 && states[v].length == half)
-        return v;
-    return -1;
+    // if (v != -1 && states[v].length == half)
+    //     return v;
+    // return -1;
+    //------------------------------------
+    // auto iter = halfSuffixLinks.find(u);
+    // if (iter == halfSuffixLinks.end())
+    // {
+    //     return -1;
+    // }
+    // return iter->second;
+    return halfSuffixLinks[u];
 }
