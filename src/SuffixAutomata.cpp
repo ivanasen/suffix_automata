@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <stack>
+#include <algorithm>
 
 #include "SuffixAutomata.h"
 
@@ -14,10 +15,12 @@ SuffixAutomata::SuffixAutomata(char *input, int size)
 {
     CompactArray<ALPHABET_SIZE>::initialize(inputSize, inputSize * 2);
     states.reserve(inputSize * 2);
+    links.reserve(inputSize * 2);
     leaves.reserve(inputSize);
 
     // Add state for empty word
     states.emplace_back(-1, 0);
+    links.emplace_back();
     leaves.insert(0);
 
     for (int i = 0; i < inputSize; ++i)
@@ -35,6 +38,7 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
     int r = states.size();
     states.emplace_back(0, states[last].length + 1);
     leaves.insert(r);
+    links.emplace_back();
 
     // add edges to r and find p with link to q
     int p = last;
@@ -53,6 +57,7 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
         {
             // we don't have to split q, just set the correct suffix link
             states[r].link = q;
+            links[q].push_back(r);
 
             auto iter = leaves.find(q);
             if (iter != leaves.end())
@@ -65,10 +70,22 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
             // we have to split, add q'
             int qq = states.size();
             states.emplace_back(states[q]);
+            links.emplace_back();
             states.back().length = states[p].length + 1;
+
+            int qLink = states[q].link;
+            if (qLink != -1)
+            {
+                auto iter = std::find(links[qLink].begin(), links[qLink].end(), q);
+                links[qLink].erase(iter);
+
+                links[qLink].push_back(qq);
+            }
 
             states[r].link = qq;
             states[q].link = qq;
+            links[qq].push_back(r);
+            links[qq].push_back(q);
 
             transitionsCount += states.back().states.getSize();
 
@@ -79,6 +96,10 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
                 p = states[p].link;
             }
         }
+    }
+    else
+    {
+        links[0].push_back(r);
     }
 
     last = r;
@@ -108,30 +129,66 @@ int SuffixAutomata::getFinalsCount() const
 
 void SuffixAutomata::markHalfLenSuffixLinks()
 {
-    int curr;
-    int currLen;
-    std::unordered_map<int, int> lenToState;
+    // int curr;
+    // int currLen;
+    // std::unordered_map<int, int> lenToState;
 
-    for (int leaf : leaves)
+    // for (int leaf : leaves)
+    // {
+    //     curr = leaf;
+    //     lenToState.clear();
+
+    //     while (curr != -1)
+    //     {
+    //         currLen = states[curr].length;
+    //         auto iter = lenToState.find(currLen * 2);
+    //         if (iter != lenToState.end())
+    //         {
+    //             halfSuffixLinks[iter->second] = curr;
+    //         }
+
+    //         if (!(currLen % 2))
+    //         {
+    //             lenToState[currLen] = curr;
+    //         }
+
+    //         curr = states[curr].link;
+    //     }
+    // }
+
+    std::vector<int> seen(inputSize + 1, -1);
+    std::stack<std::pair<int, int>> dfs;
+    dfs.push({0, 0});
+
+    std::pair<int, int> topP;
+    int top;
+    int i;
+    while (!dfs.empty())
     {
-        curr = leaf;
-        lenToState.clear();
+        topP = dfs.top();
+        top = topP.second;
+        dfs.pop();
 
-        while (curr != -1)
+        if (topP.first == 0)
         {
-            currLen = states[curr].length;
-            auto iter = lenToState.find(currLen * 2);
-            if (iter != lenToState.end())
+            State &topState = states[top];
+
+            int seenFound = seen[topState.length >> 1];
+            if (topState.length % 2 == 0 && seenFound != -1)
             {
-                halfSuffixLinks[iter->second] = curr;
+                halfSuffixLinks[top] = seenFound;
             }
 
-            if (!(currLen % 2))
+            seen[topState.length] = top;
+            dfs.push({1, topState.length});
+            for (i = 0; i < links[top].size(); ++i)
             {
-                lenToState[currLen] = curr;
+                dfs.push({0, links[top][i]});
             }
-
-            curr = states[curr].link;
+        }
+        else
+        {
+            seen[top] = -1;
         }
     }
 }
