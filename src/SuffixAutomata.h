@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <bitset>
+#include <unordered_map>
+#include <unordered_set>
 #include "CompactArray.hpp"
 
 const int ALPHABET_SIZE = 26;
@@ -13,12 +15,10 @@ struct State
 {
     int link;
     int length;
-    int start;
-    bool primary = false;
     CompactArray<ALPHABET_SIZE> states;
 
-    State(int link, int length, bool primary)
-        : link(link), length(length), primary(primary)
+    State(int link, int length)
+        : link(link), length(length)
     {
     }
 };
@@ -29,10 +29,10 @@ struct SuffixAutomata
     int last = 0;
 
     std::vector<State> states;
-    char* input;
+    char *input;
     int inputSize;
 
-    SuffixAutomata(char* input, int size);
+    SuffixAutomata(char *input, int size);
 
     void addLetter(char c, int primaryCount);
 
@@ -42,12 +42,14 @@ struct SuffixAutomata
 
     int getFinalsCount() const;
 
-    int getSquaresCount() const;
+    int getSquaresCount();
 
 private:
     int findHalfLengthLink(int u) const;
 
     int traverse(int startState, int length) const;
+
+    void markHalfLengthStates(int start, int& count, std::unordered_map<int, int>& seen);
 };
 
 #endif

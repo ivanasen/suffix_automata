@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdio>
+#include <stack>
 
 #include "SuffixAutomata.h"
 
@@ -15,7 +16,7 @@ SuffixAutomata::SuffixAutomata(char *input, int size)
     states.reserve(SIZE * 2);
 
     // Add state for empty word
-    states.emplace_back(-1, 0, true);
+    states.emplace_back(-1, 0);
 
     for (int i = 0; i < inputSize; ++i)
     {
@@ -30,8 +31,7 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
     c -= FIRST_LETTER;
 
     int r = states.size();
-    states.emplace_back(0, states[last].length + 1, true);
-    states.back().start = 0;
+    states.emplace_back(0, states[last].length + 1);
 
     // add edges to r and find p with link to q
     int p = last;
@@ -57,8 +57,6 @@ void SuffixAutomata::addLetter(char c, int primaryCount)
             int qq = states.size();
             states.emplace_back(states[q]);
             states.back().length = states[p].length + 1;
-            states.back().primary = false;
-            states.back().start = primaryCount - states[p].length - 2;
 
             states[r].link = qq;
             states[q].link = qq;
@@ -99,65 +97,46 @@ int SuffixAutomata::getFinalsCount() const
     return count;
 }
 
-int SuffixAutomata::getSquaresCount() const
+void SuffixAutomata::markHalfLengthStates(int start, int &count, std::unordered_map<int, int> &seen)
 {
-    int count = 1;
-    int halfInputSize = inputSize >> 1;
-    for (int i = 0; i < states.size(); ++i)
+    State s = states[start];
+    if (s.length % 2 == 0 && seen.find(s.length >> 1) != seen.end())
     {
-        if (states[i].primary)
+        int halfLenLink = findHalfLengthLink(start);
+        if (seen[s.length >> 1] == halfLenLink)
         {
-            if (states[i].length % 2)
-            {
-                continue;
-            }
-
-            int h = findHalfLengthLink(i);
-            if (h == -1)
-                continue;
-
-            if (states[h].primary)
-            {
-                // The state is a prefix
-                ++count;
-            }
-        }
-        else
-        {
-            if (states[i].length >= halfInputSize)
-            {
-                continue;
-            }
-
-            int traversed = traverse(i, states[i].length);
-            if (traversed != -1 && states[traversed].length == (states[i].length << 1))
-            {
-                ++count;
-            }
+            ++count;
         }
     }
 
-    return count;
+    seen[s.length] = start;
+    for (int i = 0, j = 0; i < ALPHABET_SIZE && j < s.states.getSize(); ++i)
+    {
+        int trans = s.states.get(i);
+
+        if (trans == -1)
+        {
+            continue;
+        }
+
+        ++j;
+
+        if (states[trans].length == s.length + 1)
+        {
+            markHalfLengthStates(trans, count, seen);
+        }
+    }
+    seen.erase(s.length);
 }
 
-int SuffixAutomata::traverse(int startState, int length) const
+int SuffixAutomata::getSquaresCount()
 {
-    int currentState = startState;
-    int currentPos = states[startState].start;
+    int count = 1;
 
-    while (currentPos - states[startState].start < length)
-    {
-        int next = states[currentState].states.get(input[currentPos] - FIRST_LETTER);
-        if (next == -1)
-        {
-            return -1;
-        }
+    std::unordered_map<int, int> seen;
+    markHalfLengthStates(0, count, seen);
 
-        currentState = next;
-        ++currentPos;
-    }
-
-    return currentState;
+    return count;
 }
 
 int SuffixAutomata::findHalfLengthLink(int u) const
