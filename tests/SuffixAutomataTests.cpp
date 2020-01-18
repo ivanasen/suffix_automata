@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string.h>
 #include "../src/SuffixAutomata.h"
 
 using namespace std;

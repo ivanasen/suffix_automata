@@ -11,18 +11,19 @@
 #include "SuffixAutomata.h"
 
 SuffixAutomata::SuffixAutomata(char *input, int size)
-    : input(input), inputSize(size), startLink(size * 2 + 1), endLink(size * 2 + 1)
+    : input(input),
+      inputSize(size),
+      startLink(size * 2 + 1),
+      endLink(size * 2 + 1)
 {
-    CompactArray<ALPHABET_SIZE>::initialize(inputSize / 2, inputSize * 2);
     states.reserve(inputSize * 2);
     linksToChildren.reserve(inputSize * 2);
     linksToChildrenNext.reserve(inputSize * 2);
+    transChar.reserve(inputSize * 3);
+    transVal.reserve(inputSize * 3);
+    transNext.reserve(inputSize * 3);
 
-    // Add state for empty word
-    states.emplace_back(-1, 0);
-    endLink[0] = 0;
-    linksToChildren.push_back(-1);
-    linksToChildrenNext.push_back(-1);
+    newState(0);
 
     for (int i = 0; i < inputSize; ++i)
     {
@@ -36,24 +37,18 @@ void SuffixAutomata::addLetter(char c)
 {
     c -= FIRST_LETTER;
 
-    int r = states.size();
-    states.emplace_back(0, states[last].length + 1);
-    startLink[r] = linksToChildren.size();
-    endLink[r] = linksToChildren.size();
-    linksToChildren.push_back(-1);
-    linksToChildrenNext.push_back(-1);
+    int r = newState(states[last].length + 1);
 
     int p = last;
-    while (p > -1 && states[p].states.get(c) == -1)
+    while (p > -1 && setTransIfNotExists(p, c, r))
     {
-        states[p].states.set(c, r);
         p = states[p].linkOrHalfLenLink;
         ++transitionsCount;
     }
 
     if (p != -1)
     {
-        int q = states[p].states.get(c);
+        int q = getTrans(p, c);
 
         if (states[p].length + 1 == states[q].length)
         {
@@ -62,33 +57,25 @@ void SuffixAutomata::addLetter(char c)
         }
         else
         {
-            int qq = states.size();
-            states.emplace_back(states[q]);
-            startLink[qq] = linksToChildren.size();
-            endLink[qq] = linksToChildren.size();
-            linksToChildren.push_back(r);
-            linksToChildrenNext.push_back(-1);
+            int qq = cloneState(q);
+            states[qq].length = states[p].length + 1;
 
-            states.back().length = states[p].length + 1;
-
-            int qLink = states[q].linkOrHalfLenLink;
-            swapLinkToChild(qLink, q, qq);
+            swapLinkToChild(states[q].linkOrHalfLenLink, q, qq);
 
             states[r].linkOrHalfLenLink = qq;
             states[q].linkOrHalfLenLink = qq;
             addLinkToChild(qq, q);
+            addLinkToChild(qq, r);
 
-            transitionsCount += states.back().states.getSize();
-
-            while (p > -1 && states[p].states.get(c) == q)
+            while (p > -1 && setTransIfEq(p, c, q, qq))
             {
-                states[p].states.set(c, qq);
                 p = states[p].linkOrHalfLenLink;
             }
         }
     }
     else
     {
+        states[r].linkOrHalfLenLink = 0;
         addLinkToChild(0, r);
     }
 
@@ -112,6 +99,8 @@ int SuffixAutomata::getFinalsCount() const
 
 void SuffixAutomata::markHalfLenSuffixLinks()
 {
+    transChar.clear();
+
     std::vector<int> seen(inputSize + 1, -1);
     std::stack<std::pair<int, int>> dfs;
     dfs.push({0, 0});
@@ -162,9 +151,7 @@ void SuffixAutomata::markHalfLenSuffixLinks()
 
 int SuffixAutomata::getSquaresCount()
 {
-    // puts("Getting squares\n");
     markHalfLenSuffixLinks();
-    // puts("Marked Half Length squares\n");
 
     int count = 1;
 
@@ -177,7 +164,7 @@ int SuffixAutomata::getSquaresCount()
     int top;
     int halfLenLink;
     int trans;
-    int i, j;
+    int i;
     while (!dfs.empty())
     {
         topP = dfs.top();
@@ -200,16 +187,9 @@ int SuffixAutomata::getSquaresCount()
 
             startLink[topState.length] = top;
             dfs.push({1, topState.length});
-            for (i = 0, j = 0; i < ALPHABET_SIZE && j < topState.states.getSize(); ++i)
+            for (i = topState.transStart; i != -1; i = transNext[i])
             {
-                trans = topState.states.get(i);
-
-                if (trans == -1)
-                {
-                    continue;
-                }
-
-                ++j;
+                trans = transVal[i];
 
                 if (states[trans].length == topState.length + 1)
                 {
@@ -262,4 +242,140 @@ void SuffixAutomata::swapLinkToChild(int state, int child, int newChild)
             return;
         }
     }
+}
+
+int SuffixAutomata::getTrans(int state, char c)
+{
+    for (int i = states[state].transStart; i != -1; i = transNext[i])
+    {
+        if (transChar[i] == c)
+        {
+            return transVal[i];
+        }
+    }
+    return -1;
+}
+
+void SuffixAutomata::setTrans(int state, char c, int val)
+{
+    int i = states[state].transStart;
+    if (transChar[i] == -1)
+    {
+        transChar[i] = c;
+        transVal[i] = val;
+        return;
+    }
+
+    for (; transNext[i] != -1; i = transNext[i])
+    {
+        if (transChar[i] == c)
+        {
+            transVal[i] = val;
+            return;
+        }
+    }
+
+    if (transChar[i] == c)
+    {
+        transVal[i] = val;
+        return;
+    }
+
+    transNext[i] = transChar.size();
+    transChar.push_back(c);
+    transVal.push_back(val);
+    transNext.push_back(-1);
+}
+
+bool SuffixAutomata::setTransIfEq(int state, char c, int val, int newVal)
+{
+    int i = states[state].transStart;
+    if (transChar[i] == -1)
+    {
+        return false;
+    }
+
+    for (; i != -1; i = transNext[i])
+    {
+        if (transChar[i] == c)
+        {
+            if (transVal[i] == val)
+            {
+                transVal[i] = newVal;
+                return true;
+            }
+            return false;
+        }
+    }
+    return false;
+}
+
+bool SuffixAutomata::setTransIfNotExists(int state, char c, int val)
+{
+    int i = states[state].transStart;
+    if (transChar[i] == -1)
+    {
+        transChar[i] = c;
+        transVal[i] = val;
+        return true;
+    }
+
+    for (; transNext[i] != -1; i = transNext[i])
+    {
+        if (transChar[i] == c)
+        {
+            return false;
+        }
+    }
+
+    if (transChar[i] == c)
+    {
+        return false;
+    }
+
+    transNext[i] = transChar.size();
+    transChar.push_back(c);
+    transVal.push_back(val);
+    transNext.push_back(-1);
+    return true;
+}
+
+int SuffixAutomata::newState(int length)
+{
+    int r = states.size();
+    states.emplace_back(-1, length, transChar.size());
+    startLink[r] = linksToChildren.size();
+    endLink[r] = linksToChildren.size();
+    linksToChildren.push_back(-1);
+    linksToChildrenNext.push_back(-1);
+
+    transChar.push_back(-1);
+    transVal.push_back(-1);
+    transNext.push_back(-1);
+
+    return r;
+}
+
+int SuffixAutomata::cloneState(int state)
+{
+    int clone = states.size();
+    states.emplace_back(states[state]);
+
+    startLink[clone] = linksToChildren.size();
+    endLink[clone] = linksToChildren.size();
+    linksToChildren.push_back(-1);
+    linksToChildrenNext.push_back(-1);
+
+    states[clone].transStart = transChar.size();
+    transChar.push_back(-1);
+    transVal.push_back(-1);
+    transNext.push_back(-1);
+
+    for (int i = states[state].transStart; i != -1; i = transNext[i])
+    {
+        setTrans(clone, transChar[i], transVal[i]);
+        ++transitionsCount;
+    }
+
+    return clone;
 }

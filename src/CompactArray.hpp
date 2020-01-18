@@ -7,6 +7,7 @@
 
 const int SHRINKING_SIZE = 3;
 
+// Unused in current implementation
 template <const int SIZE>
 struct CompactArray
 {
