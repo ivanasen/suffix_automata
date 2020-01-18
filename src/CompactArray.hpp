@@ -5,18 +5,17 @@
 #include <vector>
 #include <stdio.h>
 
+const int SHRINKING_SIZE = 3;
+
 template <const int SIZE>
 struct CompactArray
 {
-    inline static std::vector<int> bigTransitionState;
-    inline static std::vector<int> smallTransitionState;
-
-    static const int SHRINKING_SIZE = 3;
+    static std::vector<int> bigTransitionState;
+    static std::vector<int> smallTransitionState;
 
     int id0OrStartIndex = -1;
     int id1OrIsBigger = -1;
     int id2OrSize = -1;
-
     int smallArrIndex = -1;
 
     static void initialize(int bigTransitionsCapacity, int smallTransitionsCapacity)
@@ -150,5 +149,10 @@ struct CompactArray
         return id2OrSize;
     }
 };
+
+template <const int SIZE>
+std::vector<int> CompactArray<SIZE>::bigTransitionState;
+template <const int SIZE>
+std::vector<int> CompactArray<SIZE>::smallTransitionState;
 
 #endif

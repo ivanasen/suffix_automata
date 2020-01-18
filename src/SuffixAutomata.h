@@ -12,32 +12,33 @@ const int FIRST_LETTER = 97;
 
 struct State
 {
-    int link;
+    int linkOrHalfLenLink;
     int length;
     CompactArray<ALPHABET_SIZE> states;
 
     State(int link, int length)
-        : link(link), length(length)
+        : linkOrHalfLenLink(link), length(length)
     {
     }
 };
 
 struct SuffixAutomata
 {
+    int finalsCount = 0;
     int transitionsCount = 0;
     int last = 0;
 
     std::vector<State> states;
     char *input;
     int inputSize;
-    std::unordered_set<int> leaves;
-    std::vector<int> halfSuffixLinks;
-    std::vector<std::vector<int>> links;
-    // std::unordered_map<int, int> halfSuffixLinks;
+    std::vector<int> linksToChildren;
+    std::vector<int> linksToChildrenNext;
+    std::vector<int> startLink;
+    std::vector<int> endLink;
 
     SuffixAutomata(char *input, int size);
 
-    void addLetter(char c, int primaryCount);
+    void addLetter(char c);
 
     int getStatesCount() const;
 
@@ -48,11 +49,15 @@ struct SuffixAutomata
     int getSquaresCount();
 
 private:
-    int findHalfLengthLink(int u) const;
-
     int traverse(int startState, int length) const;
 
     void markHalfLenSuffixLinks();
+
+    void calculateFinalsCount();
+
+    void addLinkToChild(int state, int child);
+
+    void swapLinkToChild(int state, int child, int newChild);
 };
 
 #endif
