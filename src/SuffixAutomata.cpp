@@ -11,9 +11,9 @@
 #include "SuffixAutomata.h"
 
 SuffixAutomata::SuffixAutomata(char *input, int size)
-    : input(input), inputSize(size), startLink(inputSize * 2), endLink(inputSize * 2)
+    : input(input), inputSize(size), startLink(size * 2 + 1), endLink(size * 2 + 1)
 {
-    CompactArray<ALPHABET_SIZE>::initialize(inputSize, inputSize * 2);
+    CompactArray<ALPHABET_SIZE>::initialize(inputSize / 2, inputSize * 2);
     states.reserve(inputSize * 2);
     linksToChildren.reserve(inputSize * 2);
     linksToChildrenNext.reserve(inputSize * 2);
@@ -168,7 +168,8 @@ int SuffixAutomata::getSquaresCount()
 
     int count = 1;
 
-    std::fill(startLink.begin(), startLink.begin() + inputSize + 2, -1);
+    startLink.resize(inputSize + 1);
+    std::fill(startLink.begin(), startLink.end(), -1);
     std::stack<std::pair<int, int>> dfs;
     dfs.push({0, 0});
 

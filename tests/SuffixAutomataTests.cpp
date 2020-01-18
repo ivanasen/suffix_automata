@@ -34,23 +34,23 @@ void squaresSingle(char *s, int expectedSquares)
 
 void testSquares()
 {
-    // squaresSingle("", 1);
-    // squaresSingle("abcbc", 1);
-    // squaresSingle("aaaa", 3);
-    // squaresSingle("cacaac", 2);
-    // squaresSingle("bbaacaa", 3);
-    // squaresSingle("bcbcc", 2);
-    // squaresSingle("bcbcbcbc", 3);
-    // squaresSingle("abcabc", 2);
-    // squaresSingle("abbcbb", 2);
-    // squaresSingle("abbb", 2);
-    // squaresSingle("abcbcbcbc", 2);
-    // squaresSingle("abcdbcdebcdbcd", 2);
-    // squaresSingle("abbbbb", 3);
-    // squaresSingle("ebcbcbabc", 1);
-    // squaresSingle("ebcbcbcbcebabcbabc", 2);
-    // squaresSingle("baacaaddeddeddedd", 4);
-    // squaresSingle("baaaab", 2);
+    squaresSingle("", 1);
+    squaresSingle("abcbc", 1);
+    squaresSingle("aaaa", 3);
+    squaresSingle("cacaac", 2);
+    squaresSingle("bbaacaa", 3);
+    squaresSingle("bcbcc", 2);
+    squaresSingle("bcbcbcbc", 3);
+    squaresSingle("abcabc", 2);
+    squaresSingle("abbcbb", 2);
+    squaresSingle("abbb", 2);
+    squaresSingle("abcbcbcbc", 2);
+    squaresSingle("abcdbcdebcdbcd", 2);
+    squaresSingle("abbbbb", 3);
+    squaresSingle("ebcbcbabc", 1);
+    squaresSingle("ebcbcbcbcebabcbabc", 2);
+    squaresSingle("baacaaddeddeddedd", 4);
+    squaresSingle("baaaab", 2);
 
     cout << '\n';
 }
