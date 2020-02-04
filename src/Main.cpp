@@ -9,7 +9,7 @@
 
 #include "SuffixAutomata.h"
 
-SuffixAutomata build(char *in)
+void build(char *in)
 {
     int fileDesc = open(in, O_RDONLY);
     if (fileDesc == -1)
@@ -26,7 +26,11 @@ SuffixAutomata build(char *in)
 
     SuffixAutomata automata(mmapedFile, fileSize);
 
-    return automata;
+    printf("%d\n%d\n%d\n%d\n",
+           automata.getStatesCount(),
+           automata.getTransitionsCount(),
+           automata.getFinalsCount(),
+           automata.getSquaresCount());
 }
 
 int main(int argc, char **argv)
@@ -41,12 +45,7 @@ int main(int argc, char **argv)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    SuffixAutomata automata = build(argv[1]);
-    printf("%d\n%d\n%d\n%d\n",
-           automata.getStatesCount(),
-           automata.getTransitionsCount(),
-           automata.getFinalsCount(),
-           automata.getSquaresCount());
+    build(argv[1]);
 
     return 0;
 }

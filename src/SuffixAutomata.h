@@ -52,8 +52,6 @@ struct SuffixAutomata
     int getSquaresCount();
 
 private:
-    int traverse(int startState, int length) const;
-
     void markHalfLenSuffixLinks();
 
     void calculateFinalsCount();
